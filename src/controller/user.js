@@ -2,9 +2,16 @@ const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const { generateToken } = require("../helper/auth");
 const { responses } = require("../middleware/common");
-const { findEmail, create, verification } = require("../model/user");
+const {
+  findEmail,
+  create,
+  verification,
+  getProfile,
+  checkExisting,
+  updateProfile,
+} = require("../model/user");
 const email = require("../middleware/email");
-
+const jwt = require("jsonwebtoken");
 const Port = process.env.PORT;
 const Host = process.env.HOST;
 
@@ -75,9 +82,16 @@ const UserController = {
     delete user.otp;
     delete user.verif;
     const payload = {
+      id_user: user.id_user,
       email: user.email,
     };
+    console.log("payload=", payload);
     user.token = generateToken(payload);
+    res.cookie("token", user.token, {
+      httpOnly: true,
+      secure: false,
+      maxAge: 3600000,
+    });
     responses(res, 200, false, user, "Login success");
   },
   otp: async (req, res, next) => {
@@ -100,6 +114,75 @@ const UserController = {
       null,
       "Otp not valid, please check your email!"
     );
+  },
+
+  getProfile: async (req, res, next) => {
+    const email = req.payload.email;
+    console.log(email);
+    const {
+      rows: [user],
+    } = await getProfile(email);
+
+    if (user === undefined) {
+      res.json({
+        message: "undefined user",
+      });
+      return;
+    }
+    delete user.password;
+    return responses(res, 200, true, user, "get profile success");
+  },
+
+  updateUsers: async (req, res, next) => {
+    const profile = {};
+    const email = req.payload.email;
+    const { photo } = req.files;
+    profile.photo = photo ? photo.path : null;
+
+    updateProfile(email, req.body)
+      .then((data) => {
+        responses(res, 200, true, data, "berhasil upload photo");
+      })
+      .catch((e) => responses(res, 404, false, e, "gagal upload photo"));
+  },
+  userLogout: (req, res, next) => {
+    const data = {
+      message: "logout success",
+    };
+
+    try {
+      res.cookie("token", "", { maxAge: 1 });
+      responses(res, 200, true, data, "Logout Successful");
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  deleteUsers: async (req, res, next) => {
+    const emailID = req.params.emailid;
+
+    try {
+      const {
+        rows: [count],
+      } = await checkExisting(emailID);
+      const result = parseInt(count.total);
+
+      if (result === 0) {
+        responses(
+          res,
+          404,
+          false,
+          null,
+          "Data not found, you cannot edit the data which is not exist"
+        );
+      }
+
+      usersModel.deleteUsers(emailID);
+      responses(res, 200, true, emailID, "User data has just been deleted");
+    } catch (error) {
+      console.log(error);
+      next(errorServer);
+    }
   },
 };
 

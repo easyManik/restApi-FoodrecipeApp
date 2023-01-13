@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
     refreshToken: process.env.OAUTH_REFRESH_TOKEN,
   },
 });
-console.log(transporter);
+// console.log(transporter);
 module.exports = (email, subject, url, name) => {
   const mailOptions = {
     from: process.env.MAIL_USERNAME,

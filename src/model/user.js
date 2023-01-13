@@ -49,4 +49,55 @@ const verification = (email) =>
     )
   );
 
-module.exports = { create, findEmail, verification };
+const searchUser = (email) => {
+  console.log("searching users...");
+  return Pool.query(`SELECT * FROM users WHERE email = '${email}';`);
+};
+
+const getProfile = (email) => {
+  return new Promise((resolve, reject) => {
+    Pool.query(
+      `SELECT * FROM users WHERE email = '${email}';`,
+      (error, result) => {
+        if (!error) {
+          resolve(result);
+        } else {
+          reject(error);
+        }
+      }
+    );
+  });
+};
+
+const checkExisting = (emailID) => {
+  return Pool.query(
+    `SELECT COUNT(*) AS total FROM users WHERE email = '${emailID}';`
+  );
+};
+
+const updateProfile = ({ photo }, email) => {
+  return new Promise((resolve, reject) => {
+    Pool.query(
+      `UPDATE users SET photo='${photo}' WHERE email = '${email}';`,
+      [photo],
+      (err, result) => {
+        if (!err) {
+          console.log(result);
+          resolve(result);
+        } else {
+          reject(new Error(err));
+        }
+      }
+    );
+  });
+};
+
+module.exports = {
+  create,
+  findEmail,
+  verification,
+  searchUser,
+  getProfile,
+  checkExisting,
+  updateProfile,
+};

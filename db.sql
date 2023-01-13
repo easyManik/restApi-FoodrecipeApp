@@ -1,4 +1,4 @@
--- Active: 1670551262223@@127.0.0.1@5432@foodrecipe
+-- Active: 1673186928710@@127.0.0.1@5432
 create table users(
     id_user VARCHAR(255) PRIMARY KEY,
     name VARCHAR(50) not NULL,
@@ -13,23 +13,42 @@ ALTER TABLE users ADD verif INT;
 ALTER TABLE users ADD otp varchar(32);
 
 
-DROP TABLE users ;
+DROP TABLE recipes ;
 
-CREATE Table recipe(
-    id_recipe SERIAL PRIMARY KEY,
-    name_recipe VARCHAR(255),
-    photo VARCHAR(255),
-    video VARCHAR(255),
-    ingredients VARCHAR(1000),
-    date_post TIMESTAMP DEFAULT current_timestamp,
-    id_user INT  REFERENCES users(id_user) NOT NULL
+-- CREATE Table recipe(
+--     id_recipe VARCHAR(255) PRIMARY KEY,
+--     name_recipe VARCHAR(255),
+--     photo VARCHAR(255),
+--     video VARCHAR(255),
+--     ingredients VARCHAR(1000),
+--     date_post TIMESTAMP DEFAULT current_timestamp,
+--     id_user VARCHAR(255)  REFERENCES users(id_user) NOT NULL
+-- );
+
+CREATE TABLE recipes (
+    id varchar(255) not null,
+    title VARCHAR(255) NOT NULL,
+    image varchar(255) not null,
+    ingredient text NOT NULL,
+    video varchar(255) not null,
+    id_user varchar(255) not null REFERENCES users (id_user) ON DELETE CASCADE ON UPDATE CASCADE,
+    post_at timestamp default current_timestamp,
+    UNIQUE (id)
+);
+
+CREATE TABLE saved (
+    id SERIAL NOT NULL,
+    id_user varchar(255) not null REFERENCES users (id_user) ON DELETE CASCADE ON UPDATE CASCADE,
+    id_recipe varchar(255) not null REFERENCES recipes (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE likes (
+    id SERIAL NOT NULL,
+    id_user varchar(255) not null REFERENCES users (id_user) ON DELETE CASCADE ON UPDATE CASCADE,
+    id_recipe varchar(255) not null REFERENCES recipes (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
-CREATE TABLE comments (
-    id_comment SERIAL PRIMARY KEY,
-    comments VARCHAR(500) NOT NULL,
-    id_user INT REFERENCES  users(id_user) NOT NULL,
-    id_recipe INT REFERENCES recipe(id_recipe) NOT NULL,
-    data_comment TIMESTAMP DEFAULT current_timestamp
-);
+INSERT INTO likes(id_user, id_recipe) VALUES ('3cdde07b-95d8-4ef1-a077-52d66b97cc65', 'd1cb058d-1b13-478f-8146-1db9be9e23e5');
+
+SELECT likes.id, recipes.title, recipes.image, recipes.id from likes, recipes WHERE likes.id_user='3cdde07b-95d8-4ef1-a077-52d66b97cc65' AND likes.id_recipe=recipes.id

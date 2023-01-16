@@ -6,13 +6,10 @@ const { getRecipeUser } = require("./../model/recipe");
 
 module.exports.getProfie = async (req, res, next) => {
   try {
-    // const { token } = req.cookies
-    // const payload = await verifyJWT(token)
     const payload = req.payload;
     const {
       rows: [data],
     } = await getProfile(payload);
-    // await delete data["password"];
     delete data.password;
     return response(res, data, 200, "get profile success");
   } catch (error) {
@@ -21,14 +18,12 @@ module.exports.getProfie = async (req, res, next) => {
 };
 module.exports.getRecipebyProfile = async (req, res, next) => {
   try {
-    // const { token } = req.cookies
-    // const payload = await verifyJWT(token)
-    const payload = req.payload;
+    const { id_user } = req.payload;
     const {
       rows: [data],
-    } = await getProfile(payload);
-    const { rows } = await getRecipeUser(data?.id);
-    return response(res, rows, 200, "get profile success");
+    } = await getProfile(id_user);
+    const { rows } = await getRecipeUser(data.id_user);
+    return response(res, rows, 200, "get recipe by profile success");
   } catch (error) {
     console.log(error);
   }

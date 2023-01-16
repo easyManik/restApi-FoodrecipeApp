@@ -3,7 +3,6 @@ const { verifyJWT } = require("../helper/jwt");
 const { responses } = require("./common");
 
 const key = process.env.JWT_KEY;
-// console.log("jwt", key, jwt);
 const protect = (req, res, next) => {
   try {
     let token;

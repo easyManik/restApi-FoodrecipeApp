@@ -2,7 +2,6 @@ const express = require("express");
 const { UserController } = require("../controller/user");
 const { protect } = require("../middleware/auth");
 const upload = require("../middleware/upload");
-// const { auth } = require("../middleware/auth");
 
 const router = express.Router();
 

@@ -54,9 +54,7 @@ const updateRecipe = ({ id, title, image, ingredient, video, id_user }) => {
     [title, image, ingredient, video, id_user, id]
   );
 };
-const deleteRecipe = (id) => {
-  return pool.query(`DELETE FROM recipes WHERE id = $1`, [id]);
-};
+
 const getRecipeUser = (id) => {
   console.log("searching Recipe from id");
   console.log("berhasil jalankan get recipe dari profile");
@@ -79,11 +77,11 @@ const addLikedRecipes = ({ id_recipe }, id_user) => {
 };
 
 const addSavedRecipes = (data) => {
-  const { id, id_recipe } = data;
-  console.log("id user", id);
+  const { id_user, id_recipe } = data;
+  console.log("id user", id_user);
   return new Promise((resolve, reject) => {
     pool.query(
-      `INSERT INTO saved(id_user, id_recipe) VALUES ('${id}', '${id_recipe}')`,
+      `INSERT INTO saved(id_user, id_recipe) VALUES ('${id_user}', '${id_recipe}')`,
       (err, result) => {
         if (!err) {
           resolve(result);
@@ -96,9 +94,11 @@ const addSavedRecipes = (data) => {
 };
 
 const getLikedRecipes = (id_user) => {
+  console.log("id user from get liked", id_user);
   return new Promise((resolve, reject) => {
     pool.query(
-      `SELECT likes.id, recipes.title, recipes.image, recipes.id from likes, recipes WHERE likes.id_user='${id_user}' AND likes.id_recipe=recipes.id`,
+      `SELECT likes.id, recipes.title, recipes.image, recipes.id from likes, recipes WHERE likes.id_user='$1' AND likes.id_recipe=recipes.id`,
+      [id_user],
       (err, result) => {
         if (!err) {
           resolve(result);
@@ -113,7 +113,25 @@ const getLikedRecipes = (id_user) => {
 const getSavedRecipes = (id_user) => {
   return new Promise((resolve, reject) => {
     pool.query(
-      `SELECT saved.id, recipes.title. recipes.image, recipes.id from saved, recipes WHERE saved.id_user = '${id_user}' AND saved.id_recipe= recipe.id`,
+      `SELECT saved.id, recipes.title, recipes.image, recipes.id as recipe_id from saved, recipes WHERE saved.id_user = '${id_user}' AND saved.id_recipe= recipes.id`,
+      (err, result) => {
+        if (!err) {
+          resolve(result);
+        } else {
+          reject(err);
+        }
+      }
+    );
+  });
+};
+const deleteRecipe = (id) => {
+  return pool.query(`DELETE FROM recipes WHERE id = $1`, [id]);
+};
+const deleteSavedRecipes = (id) => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      `DELETE FROM saved WHERE id_recipe = $1`,
+      [id],
       (err, result) => {
         if (!err) {
           resolve(result);
@@ -125,21 +143,9 @@ const getSavedRecipes = (id_user) => {
   });
 };
 
-const deleteSavedRecipes = (id) => {
-  return new Promise((resolve, reject) => {
-    pool.query(`DELETE FROM saved WHERE id='${id}'`, (err, result) => {
-      if (!err) {
-        resolve(result);
-      } else {
-        reject(err);
-      }
-    });
-  });
-};
-
 const deleteLikedRecipes = (id) => {
   return new Promise((resolve, reject) => {
-    pool.query(`DELETE FROM likes WHERE id='${id}'`, (err, result) => {
+    pool.query(`DELETE FROM likes WHERE id_recipe=$1`, [id], (err, result) => {
       if (!err) {
         resolve(result);
       } else {

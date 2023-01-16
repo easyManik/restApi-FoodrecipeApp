@@ -17,14 +17,14 @@ const router = express.Router();
 
 router
   .get("/:id?", getRecipe)
+  .get("/?liked", protect, getlikedRecipe)
+  .get("/?saved/", protect, getsavedRecipe)
   .post("/add", protect, upload, addRecipe)
-  .put("/:id", upload, protect, updateRecipe)
-  .delete("/:id", protect, deleteRecipe)
   .post("/liked", protect, addlikedRecipe)
   .post("/saved", protect, addsavedRecipe)
-  .get("/liked", protect, getlikedRecipe)
-  .get("/saved", protect, getsavedRecipe)
-  .delete("/liked/:id", deletelikedRecipe)
-  .delete("/saved/:id", deletesavedRecipe);
+  .put("/:id", upload, protect, updateRecipe)
+  .delete("/:id", protect, deleteRecipe)
+  .delete("/?liked/:id", deletelikedRecipe)
+  .delete("/?saved/:id", deletesavedRecipe);
 
 module.exports = router;

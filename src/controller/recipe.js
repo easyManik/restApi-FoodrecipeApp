@@ -22,20 +22,20 @@ const { destroyer } = require("../middleware/destroy");
 
 module.exports.addRecipe = async (req, res, next) => {
   try {
+    const { image, video } = req.files;
     const { title, ingredient } = req.body;
+    console.log(req.payload);
     const { id_user } = req.payload;
-    const {
-      image: [image],
-      video: [video],
-    } = req.files;
-
     const recipe = {};
     recipe.id = uuid();
-    recipe.title = title;
-    recipe.image = image[0].path;
-    recipe.ingredient = JSON.stringify(ingredient.split(","));
-    recipe.video = video[0].path;
+    recipe.title = title ? title : null;
+    recipe.image = image ? image[0].path : null;
+    recipe.ingredient = ingredient
+      ? JSON.stringify(ingredient?.split(","))
+      : null;
+    recipe.video = video ? video[0].path : null;
     recipe.id_user = id_user;
+    console.log(recipe);
     const { rowCount } = await addRecipe(recipe);
     if (!rowCount) {
       return response(res, [], 500, "INSERT TO DATABASE FAILED");
@@ -45,7 +45,33 @@ module.exports.addRecipe = async (req, res, next) => {
     next(createError.InternalServerError());
   }
 };
-
+module.exports.updateRecipe = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const { image, video } = req.files;
+    const { title, ingredient } = req.body;
+    console.log(req.payload);
+    const { id_user } = req.payload;
+    const recipe = {};
+    recipe.id = id;
+    recipe.title = title ? title : null;
+    recipe.image = image ? image[0].path : null;
+    recipe.ingredient = ingredient
+      ? JSON.stringify(ingredient?.split(","))
+      : null;
+    recipe.video = video ? video[0].path : null;
+    recipe.id_user = id_user;
+    console.log(recipe);
+    const { rowCount } = await updateRecipe(recipe);
+    if (!rowCount) {
+      return response(res, [], 500, "UPDATE TO DATABASE FAILED");
+    }
+    response(res, recipe, 200, "UPDATE SUCCESS");
+  } catch (error) {
+    console.log(error);
+    next(createError.InternalServerError());
+  }
+};
 module.exports.getRecipe = async (req, res, next) => {
   const id = req.params.id;
   if (!id) {
@@ -94,58 +120,9 @@ module.exports.getRecipe = async (req, res, next) => {
   }
 };
 
-module.exports.updateRecipe = async (req, res, next) => {
-  try {
-    const id = req.params.id;
-    const { image, video } = req.files;
-    const { title, ingredient } = req.body;
-    console.log(req.payload);
-    const { id_user } = req.payload;
-    const recipe = {};
-    recipe.id = id;
-    recipe.title = title ? title : null;
-    recipe.image = image ? image[0].path : null;
-    recipe.ingredient = ingredient
-      ? JSON.stringify(ingredient?.split(","))
-      : null;
-    recipe.video = video ? video[0].path : null;
-    recipe.id_user = id_user;
-    console.log(recipe);
-    const { rowCount } = await updateRecipe(recipe);
-    if (!rowCount) {
-      return response(res, [], 500, "UPDATE TO DATABASE FAILED");
-    }
-    response(res, recipe, 200, "UPDATE SUCCESS");
-  } catch (error) {
-    console.log(error);
-    next(createError.InternalServerError());
-  }
-};
-
-module.exports.deleteRecipe = async (req, res, next) => {
-  try {
-    const id = req.params.id;
-    // get item for deleting
-    const { rows } = await getRecipeDetail(id);
-    const image = rows[0].image.split("/")[8].split(".")[0];
-    const video = rows[0].video.split("/")[8].split(".")[0];
-    await destroyer("nono/" + image, "image");
-    await destroyer("nono/" + video, "video");
-    // end of deleting in cloudinary
-    const { rowCount } = await deleteRecipe(id);
-    if (!rowCount) {
-      return response(res, [], 500, "FAILED DELETE DATA");
-    }
-    response(res, [], 200, "SUCCESS DELETE DATA");
-  } catch (error) {
-    console.log(error);
-    next(createError.InternalServerError());
-  }
-};
-
 module.exports.addlikedRecipe = async (req, res, next) => {
   try {
-    const id = req.payload.id;
+    const id = req.payload.id_user;
     // get item for deleting
     const rows = await addLikedRecipes(req.body, id);
     if (!rows) {
@@ -160,8 +137,8 @@ module.exports.addlikedRecipe = async (req, res, next) => {
 
 module.exports.addsavedRecipe = async (req, res, next) => {
   try {
-    const { id } = req.payload;
-    const data = { id, id_recipe: req.body.id_recipe };
+    const { id_user } = req.payload;
+    const data = { id_user, id_recipe: req.body.id_recipe };
     // get item for deleting
     const rows = await addSavedRecipes(data);
     if (!rows) {
@@ -176,9 +153,13 @@ module.exports.addsavedRecipe = async (req, res, next) => {
 
 module.exports.getlikedRecipe = async (req, res, next) => {
   try {
-    const id_user = req.payload.id;
-    // get item for deleting
-    const rows = await getLikedRecipes(id_user);
+    const { id_user } = req.payload;
+
+    console.log("id user from get liked", id_user);
+    const {
+      rows: [data],
+    } = await getProfile(id_user);
+    const rows = await getLikedRecipes(data.id_user);
     if (!rows) {
       return response(res, [], 500, "FAILED LIKE RECIPE DATA");
     }
@@ -191,23 +172,40 @@ module.exports.getlikedRecipe = async (req, res, next) => {
 
 module.exports.getsavedRecipe = async (req, res, next) => {
   try {
-    const id = req.payload.id;
+    const { id_user } = req.payload;
     // get item for deleting
-    const rows = await getSavedRecipes(id);
+    const {
+      rows: [data],
+    } = await getProfile(id_user);
+    const { rows } = await getSavedRecipes(data.id_user);
     if (!rows) {
-      return response(res, [], 500, "FAILED LIKE RECIPE DATA");
+      return response(res, [], 500, "FAILED GET SAVED RECIPE DATA");
     }
-    response(res, [], 200, "SUCCESS LIKED RECIPE DATA");
+    response(res, [], 200, "SUCCESS SAVED RECIPE DATA");
   } catch (error) {
     console.log(error);
     next(createError.InternalServerError());
   }
 };
-
+module.exports.deleteRecipe = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    // get item for deleting
+    const { rows } = await getRecipeDetail(id);
+    const { rowCount } = await deleteRecipe(id);
+    if (!rowCount) {
+      return response(res, [], 500, "FAILED DELETE DATA");
+    }
+    response(res, [], 200, "SUCCESS DELETE DATA");
+  } catch (error) {
+    console.log(error);
+    next(createError.InternalServerError());
+  }
+};
 module.exports.deletesavedRecipe = async (req, res, next) => {
   try {
-    const rows = await deleteSavedRecipes(req.params.id);
-    if (!rows) {
+    const rowCount = await deleteSavedRecipes(req.params.id);
+    if (!rowCount) {
       return response(res, [], 500, "FAILED DELETE SAVED RECIPE DATA");
     }
     response(res, [], 200, "SUCCESS DELETE SAVED RECIPE DATA");
@@ -219,8 +217,10 @@ module.exports.deletesavedRecipe = async (req, res, next) => {
 
 module.exports.deletelikedRecipe = async (req, res, next) => {
   try {
-    const rows = await deleteLikedRecipes(req.params.id);
-    if (!rows) {
+    const id = req.params.id;
+
+    const rowCount = await deleteLikedRecipes(id);
+    if (!rowCount) {
       return response(res, [], 500, "FAILED DELETE LIKED RECIPE DATA");
     }
     response(res, [], 200, "SUCCESS DELETE LIKED RECIPE DATA");

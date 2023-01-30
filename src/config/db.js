@@ -1,13 +1,16 @@
 const { Pool } = require("pg");
 const fs = require("fs");
-require("dotenv").config();
-
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASS,
-  port: process.env.DB_PORT,
+  user: process.env.PG_USER,
+  host: process.env.PG_HOST,
+  database: process.env.PG_DB,
+  password: process.env.PG_PASS,
+  port: process.env.PG_PORT,
+  ssl: true,
+  ssl: {
+    ca: fs.readFileSync(__dirname + "/ca.crt"),
+    rejectUnauthorized: true,
+  },
 });
 
 module.exports = pool;

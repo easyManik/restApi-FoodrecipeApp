@@ -1,4 +1,4 @@
--- Active: 1673186928710@@127.0.0.1@5432
+-- Active: 1675064026199@@pijardb-do-user-13063919-0.b.db.ondigitalocean.com@25060@food-easy@public
 create table users(
     id_user VARCHAR(255) PRIMARY KEY,
     name VARCHAR(50) not NULL,

@@ -12,7 +12,7 @@ const app = express();
 const port = 3000;
 app.use(cookieParser());
 const corsOptions = {
-  origin: "http://localhost:3001",
+  origin: "http://localhost:3000",
   credentials: true, //access-control-allow-credentials:true
   optionSuccessStatus: 200,
 };

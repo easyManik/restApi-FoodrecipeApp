@@ -69,7 +69,7 @@ const UserController = {
     if (!user) {
       return responses(res, 404, false, null, "Email bot found");
     }
-    if (user.verif == 0) {
+    if (user.verif == 1) {
       return responses(res, 404, false, null, "Email not verify");
     }
 
